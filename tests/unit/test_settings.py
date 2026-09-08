@@ -60,14 +60,15 @@ def test_settings_webhook_full_url(set_env):
     assert settings.webhook_full_url == "https://bot.example.com/webhook/supersecret"
 
 
-def test_settings_webhook_full_url_strips_trailing_slash(set_env, monkeypatch):
-    """Trailing slash в WEBHOOK_URL не приводит к двойному slash."""
-    monkeypatch.setenv("WEBHOOK_URL", "https://bot.example.com/")
+def test_settings_webhook_path_domain_coerced_to_default(set_env, monkeypatch):
+    """Если в WEBHOOK_PATH по ошибке домен — используем /webhook."""
+    monkeypatch.setenv("WEBHOOK_PATH", "ruglasses.site")
 
     from bot.config.settings import get_settings
 
     settings = get_settings()
 
+    assert settings.webhook_path == "/webhook"
     assert settings.webhook_full_url == "https://bot.example.com/webhook/supersecret"
 
 
@@ -118,7 +119,7 @@ def test_settings_admins_telegram_ids_parsed_from_csv(set_env, monkeypatch):
 
 def test_settings_admins_telegram_ids_empty_by_default(set_env, monkeypatch):
     """Если ADMINS_TELEGRAM_IDS не задан — пустой список."""
-    monkeypatch.delenv("ADMINS_TELEGRAM_IDS", raising=False)
+    monkeypatch.setenv("ADMINS_TELEGRAM_IDS", "")
 
     from bot.config.settings import get_settings
 

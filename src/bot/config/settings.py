@@ -93,6 +93,22 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    @field_validator("webhook_path")
+    @classmethod
+    def _normalize_webhook_path(cls, v: str) -> str:
+        """Path for Telegram, not a domain. 'ruglasses.site' → '/webhook'."""
+        raw = (v or "/webhook").strip()
+        if not raw.startswith("/") and "." in raw:
+            return "/webhook"
+        if not raw.startswith("/"):
+            raw = f"/{raw}"
+        return raw.rstrip("/") or "/webhook"
+
+    @field_validator("webhook_url")
+    @classmethod
+    def _strip_webhook_url(cls, v: str) -> str:
+        return v.strip().rstrip("/")
+
     @field_validator("admins_telegram_ids", mode="before")
     @classmethod
     def _parse_admins(cls, v: object) -> list[int]:
