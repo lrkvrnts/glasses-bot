@@ -1,0 +1,56 @@
+[tool.poetry]
+name = "ozon-bot"
+version = "0.1.0"
+description = "Telegram bot for Ozon Seller API"
+authors = ["You <you@example.com>"]
+readme = "README.md"
+packages = [{ from = "src", include = "bot" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+aiogram = "^3.13.0"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
+asyncpg = "^0.30.0"
+alembic = "^1.14.0"
+redis = {extras = ["hiredis"], version = "^5.2.0"}
+celery = "^5.4.0"
+httpx = "^0.28.0"
+pydantic = "^2.10.0"
+pydantic-settings = "^2.6.0"
+cryptography = "^44.0.0"
+openpyxl = "^3.1.0"
+loguru = "^0.7.3"
+structlog = "^24.4.0"
+tenacity = "^9.0.0"
+typer = "^0.13.0"
+psycopg2 = "^2.9.12"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+pytest-cov = "^6.0.0"
+ruff = "^0.8.0"
+mypy = "^1.13.0"
+freezegun = "^1.5.0"
+aiosqlite = "^0.20.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+ignore = [
+    "SIM105",  # contextlib.suppress vs try-except-pass (часто нужно логирование внутри)
+    "SIM117",  # nested with — не всегда читаемо объединять
+    "N806",    # Variable in function should be lowercase (mock'и часто называем CamelCase)
+]

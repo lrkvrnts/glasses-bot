@@ -1,0 +1,13 @@
+# Production overlay: do not publish Postgres/Redis/Flower to the internet.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+services:
+  postgres:
+    ports: !override []
+
+  redis:
+    ports: !override []
+
+  flower:
+    profiles: ["flower"]
+    ports: !override []
