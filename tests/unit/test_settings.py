@@ -82,15 +82,16 @@ def test_settings_get_settings_is_cached(set_env):
     assert s1 is s2
 
 
-def test_settings_missing_required_raises():
+def test_settings_missing_required_raises(monkeypatch):
     """Без обязательной переменной Settings падает с ValidationError."""
     import pytest
     from pydantic import ValidationError
 
     from bot.config.settings import Settings
 
+    monkeypatch.delenv("BOT_TOKEN", raising=False)
     with pytest.raises(ValidationError):
-        Settings(_env_file=None)  # никаких env и никаких полей → BOT_TOKEN отсутствует
+        Settings(_env_file=None)
 
 
 def test_settings_default_values(set_env):

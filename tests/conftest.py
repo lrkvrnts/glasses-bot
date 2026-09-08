@@ -9,8 +9,27 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from bot.db.base import Base
-from bot.db.models import *  # noqa: F401,F403  # register all models
+# CI has no .env; celery_app and EncryptionService import Settings at collection time.
+_TEST_ENV = {
+    "BOT_TOKEN": "test:token",
+    "BOT_MODE": "polling",
+    "WEBHOOK_URL": "https://bot.example.com",
+    "WEBHOOK_PATH": "/webhook",
+    "WEBHOOK_SECRET": "supersecret",
+    "DB_HOST": "localhost",
+    "DB_NAME": "test_db",
+    "DB_USER": "test_user",
+    "DB_PASSWORD": "test_pass",
+    "REDIS_URL": "redis://localhost:6379/0",
+    "CELERY_BROKER_URL": "redis://localhost:6379/1",
+    "CELERY_RESULT_BACKEND": "redis://localhost:6379/2",
+    "ENCRYPTION_KEY": "RmhpzvVz_QfGBcNCx4gPu-Ds6V-qU8cK-JSTu6_79Hw=",
+}
+for _key, _value in _TEST_ENV.items():
+    os.environ.setdefault(_key, _value)
+
+from bot.db.base import Base  # noqa: E402
+from bot.db.models import *  # noqa: E402,F401,F403  # register all models
 
 
 @pytest.fixture(autouse=True)
@@ -26,19 +45,7 @@ def clear_settings_cache() -> Iterator[None]:
 @pytest.fixture
 def env_vars() -> dict[str, str]:
     """Базовый набор env-переменных для Settings."""
-    return {
-        "BOT_TOKEN": "test:token",
-        "WEBHOOK_URL": "https://bot.example.com",
-        "WEBHOOK_SECRET": "supersecret",
-        "DB_HOST": "localhost",
-        "DB_NAME": "test_db",
-        "DB_USER": "test_user",
-        "DB_PASSWORD": "test_pass",
-        "REDIS_URL": "redis://localhost:6379/0",
-        "CELERY_BROKER_URL": "redis://localhost:6379/1",
-        "CELERY_RESULT_BACKEND": "redis://localhost:6379/2",
-        "ENCRYPTION_KEY": "test-key",
-    }
+    return dict(_TEST_ENV)
 
 
 @pytest.fixture
