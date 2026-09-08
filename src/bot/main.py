@@ -117,11 +117,15 @@ async def main() -> None:
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
 
+    logger.info("Bot process starting", mode=settings.bot_mode)
     try:
         if settings.bot_mode == "polling":
             await _run_polling(bot, dp, settings)
         else:
             await _run_webhook(bot, dp, settings)
+    except Exception:
+        logger.exception("Bot process crashed")
+        raise
     finally:
         await bot.session.close()
 

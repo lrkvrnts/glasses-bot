@@ -26,7 +26,7 @@ ENV PYTHONUNBUFFERED=1 \
     LOG_FILE=/app/logs/worker.log
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
+    libpq5 gosu \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r worker && useradd -r -g worker -d /app -s /sbin/nologin worker
 
@@ -34,8 +34,12 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY src/ ./src/
 COPY pyproject.toml poetry.lock* ./
+COPY docker/entrypoint.sh /entrypoint.sh
 
-RUN mkdir -p /app/logs && chown -R worker:worker /app
-USER worker
+RUN mkdir -p /app/logs /app/tmp \
+    && chown -R worker:worker /app \
+    && chmod +x /entrypoint.sh
 
+ENV APP_USER=worker
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["celery", "-A", "bot.tasks.celery_app", "worker", "-l", "INFO", "--concurrency=4"]

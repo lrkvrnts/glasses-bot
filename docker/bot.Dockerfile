@@ -29,7 +29,7 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=true
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
+    libpq5 gosu \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r bot && useradd -r -g bot -d /app -s /sbin/nologin bot
 
@@ -41,10 +41,14 @@ COPY src/ ./src/
 COPY migrations/ ./migrations/
 COPY scripts/ ./scripts/
 COPY alembic.ini ./
+COPY docker/entrypoint.sh /entrypoint.sh
 
-RUN mkdir -p /app/logs /app/tmp && chown -R bot:bot /app
-USER bot
+RUN mkdir -p /app/logs /app/tmp \
+    && chown -R bot:bot /app \
+    && chmod +x /entrypoint.sh
 
+ENV APP_USER=bot
+ENTRYPOINT ["/entrypoint.sh"]
 EXPOSE 8080
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=40s --retries=6 \
