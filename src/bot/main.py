@@ -44,17 +44,28 @@ async def _register_telegram_webhook(bot: Bot, settings: Settings) -> None:
             url=url,
             secret_token=settings.webhook_secret,
             drop_pending_updates=True,
+            allowed_updates=["message", "callback_query"],
         )
     except TelegramBadRequest:
         logger.error("Failed to set webhook. {}", _WEBHOOK_HINT, url=url)
         return
-    logger.info("Webhook set", url=url)
+    info = await bot.get_webhook_info()
+    logger.info(
+        "Webhook set",
+        url=info.url,
+        pending=info.pending_update_count,
+        last_error=info.last_error_message,
+    )
 
 
 async def on_shutdown(bot: Bot) -> None:
-    """Remove webhook on bot shutdown."""
-    await bot.delete_webhook()
-    logger.info("Webhook deleted")
+    """Keep production webhook registered across container restarts."""
+    settings = get_settings()
+    if settings.bot_mode == "polling":
+        await bot.delete_webhook()
+        logger.info("Polling shutdown: webhook deleted")
+        return
+    logger.info("Webhook left registered")
 
 
 async def _serve_healthz(settings: Settings) -> web.AppRunner:

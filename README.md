@@ -16,9 +16,6 @@ Telegram-бот для работы с Ozon Seller API: загрузка тов�
 - Управление остатками и ценами
 - Многопользовательский режим (мульти-кабинет)
 
-## Архитектура
-См. [.hermes/plans/2026-09-01_153000-ozon-seller-bot-architecture.md](.hermes/plans/2026-09-01_153000-ozon-seller-bot-architecture.md)
-
 ## Требования
 - Python 3.12+
 - Poetry ([установка](https://python-poetry.org/docs/#installation))

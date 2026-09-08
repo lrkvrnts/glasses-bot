@@ -1,6 +1,5 @@
 {$WEBHOOK_URL_HOST} {
     reverse_proxy bot:8080
-    encode gzip zstd
     log {
         output stdout
     }
