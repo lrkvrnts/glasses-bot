@@ -10,7 +10,7 @@ services:
     environment:
       WEBHOOK_URL_HOST: ${WEBHOOK_URL_HOST:-localhost}
     depends_on:
-      bot: { condition: service_healthy }
+      bot: { condition: service_started }
     restart: unless-stopped
 
   postgres:
@@ -55,11 +55,17 @@ services:
       - ./logs:/app/logs
       - ./tmp:/app/tmp
     healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8080/healthz', timeout=2)"]
-      interval: 30s
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2)",
+        ]
+      interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 15s
+      retries: 6
+      start_period: 40s
     restart: unless-stopped
 
   worker:

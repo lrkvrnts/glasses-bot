@@ -26,27 +26,29 @@ _WEBHOOK_HINT = (
 
 
 async def on_startup(bot: Bot) -> None:
-    """Register webhook or drop it when running in polling mode."""
+    """Drop webhook in polling. Webhook registration happens after HTTP bind."""
     settings = get_settings()
     if settings.bot_mode == "polling":
         await bot.delete_webhook(drop_pending_updates=True)
         logger.info("Polling mode: webhook not registered")
-        return
 
+
+async def _register_telegram_webhook(bot: Bot, settings: Settings) -> None:
+    """Call setWebhook after /healthz is already listening."""
+    url = settings.webhook_full_url
+    if "t.me" in settings.webhook_url.lower():
+        logger.error("Failed to set webhook. {}", _WEBHOOK_HINT, url=url)
+        return
     try:
         await bot.set_webhook(
-            url=settings.webhook_full_url,
+            url=url,
             secret_token=settings.webhook_secret,
             drop_pending_updates=True,
         )
     except TelegramBadRequest:
-        logger.error(
-            "Failed to set webhook. {}",
-            _WEBHOOK_HINT,
-            url=settings.webhook_full_url,
-        )
-        raise
-    logger.info("Webhook set", url=settings.webhook_full_url)
+        logger.error("Failed to set webhook. {}", _WEBHOOK_HINT, url=url)
+        return
+    logger.info("Webhook set", url=url)
 
 
 async def on_shutdown(bot: Bot) -> None:
@@ -88,8 +90,17 @@ async def _run_webhook(bot: Bot, dp: Dispatcher, settings: Settings) -> None:
     handler.register(app, path=webhook_path)
     setup_application(app, dp, bot=bot)
 
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, settings.webhook_host, settings.webhook_port)
+    await site.start()
     logger.info("Starting bot", host=settings.webhook_host, port=settings.webhook_port)
-    await web._run_app(app, host=settings.webhook_host, port=settings.webhook_port)  # type: ignore[attr-defined]
+    # HTTP already up so Docker healthcheck can pass even if Telegram is slow/blocked.
+    await _register_telegram_webhook(bot, settings)
+    try:
+        await asyncio.Event().wait()
+    finally:
+        await runner.cleanup()
 
 
 async def main() -> None:

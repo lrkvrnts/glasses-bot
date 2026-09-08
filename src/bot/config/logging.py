@@ -19,11 +19,18 @@ def setup_logging(settings: Settings) -> None:
         backtrace=True,
         diagnose=False,
     )
-    logger.add(
-        settings.log_file,
-        level=settings.log_level,
-        rotation=settings.log_rotation,
-        retention=settings.log_retention,
-        serialize=True,
-    )
+    try:
+        logger.add(
+            settings.log_file,
+            level=settings.log_level,
+            rotation=settings.log_rotation,
+            retention=settings.log_retention,
+            serialize=True,
+        )
+    except OSError as exc:
+        logger.warning(
+            "Cannot write log file, stdout only",
+            path=settings.log_file,
+            error=str(exc),
+        )
     logger.info("Logging configured", level=settings.log_level)
